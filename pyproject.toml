@@ -1,0 +1,110 @@
+[build-system]
+build-backend = 'setuptools.build_meta'
+requires = ['setuptools>=65.5.0', 'wheel']
+
+[project]
+authors = [
+    {name = 'Stefano Ubbiali', email = 'subbiali@phys.ethz.ch'},
+    {name = 'Christian Kühnlein', email = 'christian.kuehnlein@ecmwf.int'},
+]
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Science/Research',
+    'Operating System :: POSIX',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Topic :: Scientific/Engineering :: Atmospheric Science',
+]
+dependencies = [
+    'click>=8.0',
+    # note(stubbiali): specify commit hash until #1462 is available in a public release
+    'gt4py[dace] @ git+https://github.com/GridTools/gt4py.git@2cd0c91',
+    'h5py>=3.0',
+    'ifs_physics_common @ git+https://github.com/stubbiali/ifs-physics-common.git@main',
+    'numpy>=1.22',
+    'pydantic<2.0',
+]
+description = 'CLOUDSC2-GT4Py: Python rewrite of the ECMWF CLOUDSC2 dwarf using GT4Py.'
+keywords = [
+    'adjoint operator',
+    'cloud microphysics',
+    'performance-portability',
+    'tangent-linear operator',
+]
+license = {file = 'LICENSE.md', content-type = 'text/markdown'}
+name = 'cloudsc2_gt4py'
+readme = {file = 'README.md', content-type = 'text/markdown'}
+requires-python = '>=3.8'
+version = '0.0'
+
+[project.optional-dependencies]
+dev = ['black==24.4.0', 'flake8', 'ipdb', 'ipython<8.23.0', 'mypy', 'pre-commit']
+gpu = ['cupy']
+gpu-cuda11x = ['cupy-cuda11x']
+gpu-cuda12x = ['cupy-cuda12x']
+gpu-rocm = ['cython<3.0', 'cupy<13.0']
+
+[project.urls]
+Source = 'https://github.com/stubbiali/gt4py-dwarf-p-cloudsc2-tl-ad.git'
+
+[tool.black]
+line-length = 100
+target-version = ['py39']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.gt_cache
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+
+  # The following are specific to Black, you probably don't want those.
+  | blib2to3
+  | tests/data
+  | profiling
+)/
+'''
+
+[tool.mypy]
+check_untyped_defs = true
+# set to `true` once cupy and sympl support typing
+disallow_any_unimported = false
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+exclude = [
+    'src/cloudsc2_gt4py/physics/adjoint/_stencils/',
+    'src/cloudsc2_gt4py/physics/common/_stencils/',
+    'src/cloudsc2_gt4py/physics/nonlinear/_stencils/',
+    'src/cloudsc2_gt4py/physics/tangent_linear/_stencils/',
+]
+implicit_optional = false
+install_types = true
+plugins = 'numpy.typing.mypy_plugin'
+show_column_numbers = true
+show_error_codes = true
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = 'h5py'
+ignore_missing_imports = true
+
+[tool.setuptools]
+platforms = ['Linux', 'Mac']
+
+[tool.setuptools.package-data]
+'cloudsc2_gt4py' = ['py.typed']
+
+[tool.setuptools.packages]
+find = {namespaces = false, where = ['src']}
