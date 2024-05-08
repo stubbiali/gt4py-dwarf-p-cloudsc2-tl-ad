@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 # `cloudsc2_gt4py`: GT4Py-based implementation of the ECMWF CLOUDSC2 dwarf
 
 This repository contains the Python rewrite of the
