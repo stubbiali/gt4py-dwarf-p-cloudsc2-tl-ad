@@ -1,4 +1,5 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![DOI](https://zenodo.org/badge/780814384.svg)](https://zenodo.org/doi/10.5281/zenodo.11155036)
 
 # `cloudsc2_gt4py`: GT4Py-based implementation of the ECMWF CLOUDSC2 dwarf
 
