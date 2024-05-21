@@ -17,7 +17,7 @@
 from gt4py.cartesian import gtscript
 
 from cloudsc2_gt4py.physics.tangent_linear._stencils.cuadjtqs import f_cuadjtqs_tl
-from ifs_physics_common.framework.stencil import stencil_collection
+from ifs_physics_common.stencil import stencil_collection
 
 
 @stencil_collection("cloudsc2_tl")

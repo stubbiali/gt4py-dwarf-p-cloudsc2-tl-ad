@@ -23,16 +23,16 @@ from cloudsc2_gt4py.physics.adjoint.microphysics import Cloudsc2AD
 from cloudsc2_gt4py.physics.common.increment import StateIncrement
 from cloudsc2_gt4py.physics.common.saturation import Saturation
 from cloudsc2_gt4py.physics.tangent_linear.microphysics import Cloudsc2TL
-from ifs_physics_common.utils.numpyx import to_numpy
+from ifs_physics_common.numpyx import to_numpy
 
 if TYPE_CHECKING:
     from datetime import timedelta
     from numpy.typing import NDArray
     from typing import Optional
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import DataArrayDict, ParameterDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import DataArrayDict, ParameterDict
 
 
 class SymmetryTest:

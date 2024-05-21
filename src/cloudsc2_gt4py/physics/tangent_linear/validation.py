@@ -23,16 +23,16 @@ from cloudsc2_gt4py.physics.common.increment import PerturbedState, StateIncreme
 from cloudsc2_gt4py.physics.common.saturation import Saturation
 from cloudsc2_gt4py.physics.nonlinear.microphysics import Cloudsc2NL
 from cloudsc2_gt4py.physics.tangent_linear.microphysics import Cloudsc2TL
-from ifs_physics_common.utils.timing import timing
+from ifs_physics_common.timing import timing
 
 if TYPE_CHECKING:
     from datetime import timedelta
     from numpy.typing import NDArray
-    from typing import List, Optional, Tuple
+    from typing import Optional
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import DataArrayDict, ParameterDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import DataArrayDict, ParameterDict
 
 
 class TaylorTest:
@@ -43,8 +43,8 @@ class TaylorTest:
     diags_sat: DataArrayDict
     diags_tl: DataArrayDict
     f1: float
-    f2s: Tuple[float, ...]
-    perturbed_states: List[PerturbedState]
+    f2s: tuple[float, ...]
+    perturbed_states: list[PerturbedState]
     saturation: Saturation
     state_i: DataArrayDict
     state_increment: StateIncrement
@@ -57,7 +57,7 @@ class TaylorTest:
         self,
         computational_grid: ComputationalGrid,
         factor1: float,
-        factor2s: Tuple[float, ...],
+        factor2s: tuple[float, ...],
         kflag: int,
         lphylin: bool,
         ldrain1d: bool,
@@ -235,7 +235,7 @@ class TaylorTest:
 
         return total_norm / total_count if total_count > 0 else 0
 
-    def get_fields(self, name: str, dct_name: str) -> Tuple[NDArray, NDArray, NDArray]:
+    def get_fields(self, name: str, dct_name: str) -> tuple[NDArray, NDArray, NDArray]:
         dct_nl = getattr(self, dct_name + "_nl")
         field_nl = dct_nl[name].data[:, 0, :]
 

@@ -20,20 +20,20 @@ from functools import cached_property
 import numpy as np
 from typing import TYPE_CHECKING
 
-from ifs_physics_common.framework.components import ImplicitTendencyComponent
-from ifs_physics_common.framework.grid import I, J, K
-from ifs_physics_common.framework.storage import managed_temporary_storage, zeros
-from ifs_physics_common.utils.numpyx import assign
+from ifs_physics_common.components import ImplicitTendencyComponent
+from ifs_physics_common.grid import I, J, K
+from ifs_physics_common.storage import managed_temporary_storage, zeros
+from ifs_physics_common.numpyx import assign
 
 if TYPE_CHECKING:
     from datetime import timedelta
-    from typing import Dict, Optional, Union
+    from typing import Optional, Union
 
     from gt4py.cartesian import StencilObject
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import (
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import (
         NDArrayLike,
         NDArrayLikeDict,
         ParameterDict,
@@ -69,7 +69,7 @@ class Cloudsc2TL(ImplicitTendencyComponent):
         )
         assign(self.klevel[:], np.arange(0, nk + 1))
 
-        externals: Dict[str, Union[bool, float, int]] = {}
+        externals: dict[str, Union[bool, float, int]] = {}
         externals.update(yoethf_parameters or {})
         externals.update(yomcst_parameters or {})
         externals.update(yrecld_parameters or {})

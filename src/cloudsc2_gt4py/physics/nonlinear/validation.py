@@ -18,13 +18,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from cloudsc2_gt4py.utils.iox import HDF5Reader
-from ifs_physics_common.utils.numpyx import to_numpy
-from ifs_physics_common.utils.validation import validate_field
+from ifs_physics_common.numpyx import to_numpy
+from ifs_physics_common.validation import validate_field
 
 if TYPE_CHECKING:
     from typing import Optional
 
-    from ifs_physics_common.utils.typingx import DataArrayDict
+    from ifs_physics_common.typingx import DataArrayDict
 
 
 def validate(

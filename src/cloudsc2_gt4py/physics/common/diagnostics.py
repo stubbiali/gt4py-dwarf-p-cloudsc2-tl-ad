@@ -18,11 +18,11 @@ from __future__ import annotations
 from functools import cached_property
 from typing import TYPE_CHECKING
 
-from ifs_physics_common.framework.components import DiagnosticComponent
-from ifs_physics_common.framework.grid import I, J, K
+from ifs_physics_common.components import DiagnosticComponent
+from ifs_physics_common.grid import I, J, K
 
 if TYPE_CHECKING:
-    from ifs_physics_common.utils.typingx import NDArrayLikeDict, PropertyDict
+    from ifs_physics_common.typingx import NDArrayLikeDict, PropertyDict
 
 
 class EtaLevels(DiagnosticComponent):

@@ -19,19 +19,19 @@ from functools import cached_property
 from itertools import repeat
 from typing import TYPE_CHECKING
 
-from ifs_physics_common.framework.components import ImplicitTendencyComponent
-from ifs_physics_common.framework.grid import I, J, K
-from ifs_physics_common.framework.storage import managed_temporary_storage
+from ifs_physics_common.components import ImplicitTendencyComponent
+from ifs_physics_common.grid import I, J, K
+from ifs_physics_common.storage import managed_temporary_storage
 
 if TYPE_CHECKING:
     from datetime import timedelta
-    from typing import Dict, Optional, Union
+    from typing import Optional, Union
 
     from gt4py.cartesian import StencilObject
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import NDArrayLikeDict, ParameterDict, PropertyDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import NDArrayLikeDict, ParameterDict, PropertyDict
 
 
 class Cloudsc2NL(ImplicitTendencyComponent):
@@ -54,7 +54,7 @@ class Cloudsc2NL(ImplicitTendencyComponent):
     ) -> None:
         super().__init__(computational_grid, enable_checks=enable_checks, gt4py_config=gt4py_config)
 
-        externals: Dict[str, Union[bool, float, int]] = {}
+        externals: dict[str, Union[bool, float, int]] = {}
         externals.update(yoethf_parameters or {})
         externals.update(yomcst_parameters or {})
         externals.update(yrecld_parameters or {})

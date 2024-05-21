@@ -20,10 +20,10 @@ from itertools import repeat
 import numpy as np
 from typing import TYPE_CHECKING
 
-from ifs_physics_common.framework.components import ImplicitTendencyComponent
-from ifs_physics_common.framework.grid import I, J, K
-from ifs_physics_common.framework.storage import managed_temporary_storage, zeros
-from ifs_physics_common.utils.numpyx import assign
+from ifs_physics_common.components import ImplicitTendencyComponent
+from ifs_physics_common.grid import I, J, K
+from ifs_physics_common.storage import managed_temporary_storage, zeros
+from ifs_physics_common.numpyx import assign
 
 if TYPE_CHECKING:
     from datetime import timedelta
@@ -31,14 +31,9 @@ if TYPE_CHECKING:
 
     from gt4py.cartesian import StencilObject
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import (
-        NDArrayLike,
-        NDArrayLikeDict,
-        ParameterDict,
-        PropertyDict,
-    )
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import NDArrayLike, NDArrayLikeDict, ParameterDict, PropertyDict
 
 
 class Cloudsc2AD(ImplicitTendencyComponent):

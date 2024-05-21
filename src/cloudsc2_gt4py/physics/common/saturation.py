@@ -18,15 +18,15 @@ from __future__ import annotations
 from functools import cached_property
 from typing import Optional, TYPE_CHECKING
 
-from ifs_physics_common.framework.components import DiagnosticComponent
-from ifs_physics_common.framework.grid import I, J, K
+from ifs_physics_common.components import DiagnosticComponent
+from ifs_physics_common.grid import I, J, K
 
 if TYPE_CHECKING:
     from gt4py.cartesian import StencilObject
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import NDArrayLikeDict, ParameterDict, PropertyDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import NDArrayLikeDict, ParameterDict, PropertyDict
 
 
 class Saturation(DiagnosticComponent):

@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
     from typing import Union
 
-    from ifs_physics_common.framework.config import DataTypes
+    from ifs_physics_common.config import DataTypes
 
 
 class HDF5Reader:

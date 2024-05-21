@@ -19,32 +19,32 @@ from datetime import datetime
 import numpy as np
 from typing import TYPE_CHECKING
 
-from ifs_physics_common.framework.grid import I, J, K
-from ifs_physics_common.framework.storage import allocate_data_array
-from ifs_physics_common.utils.numpyx import assign
+from ifs_physics_common.grid import I, J, K
+from ifs_physics_common.storage import zeros
+from ifs_physics_common.numpyx import assign
 
 if TYPE_CHECKING:
     from cloudsc2_gt4py.utils.iox import HDF5Reader
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import DataArray, DataArrayDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import DataArray, DataArrayDict
 
 
 def allocate_state(
     computational_grid: ComputationalGrid, *, gt4py_config: GT4PyConfig
 ) -> dict[str, DataArray]:
     def allocator(units: str) -> DataArray:
-        return allocate_data_array(
+        return zeros(
             computational_grid, (I, J, K), units, gt4py_config=gt4py_config, dtype="float"
         )
 
     def allocator_zh(units: str) -> DataArray:
-        return allocate_data_array(
+        return zeros(
             computational_grid, (I, J, K - 1 / 2), units, gt4py_config=gt4py_config, dtype="float"
         )
 
     def allocator_d(units: str) -> DataArray:
-        return allocate_data_array(
+        return zeros(
             computational_grid,
             (I, J, K),
             units,
@@ -75,12 +75,12 @@ def allocate_tendencies(
     computational_grid: ComputationalGrid, *, gt4py_config: GT4PyConfig
 ) -> dict[str, DataArray]:
     def allocator_ik(units: str) -> DataArray:
-        return allocate_data_array(
-            computational_grid, (I, J, K), units, gt4py_config=gt4py_config, dtype="float"
+        return zeros(
+            computational_grid, (I, J, K), units, gt4py_config=gt4py_config, dtype_name="float"
         )
 
     def allocator_ikd(units: str) -> DataArray:
-        return allocate_data_array(
+        return zeros(
             computational_grid,
             (I, J, K),
             units,

@@ -18,7 +18,7 @@ from gt4py.cartesian import gtscript
 
 from cloudsc2_gt4py.physics.adjoint._stencils.cuadjtqs import f_cuadjtqs_ad
 from cloudsc2_gt4py.physics.nonlinear._stencils.cuadjtqs import f_cuadjtqs_nl
-from ifs_physics_common.framework.stencil import stencil_collection
+from ifs_physics_common.stencil import stencil_collection
 
 
 @stencil_collection("cloudsc2_ad")
