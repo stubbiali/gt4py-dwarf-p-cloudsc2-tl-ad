@@ -90,11 +90,14 @@ def cloudsc2_nl(
         ZSCAL,
     )
 
-    # set to zero precipitation fluxes at the top
-    with computation(FORWARD), interval(0, 1):
+    with computation(FORWARD), interval(-1, None):
+        # set to zero precipitation fluxes at the top
         tmp_rfl[0, 0] = 0.0
         tmp_sfl[0, 0] = 0.0
         tmp_covptot[0, 0] = 0.0
+
+        # set surface pressure
+        tmp_aph_s[0, 0] = in_aph[0, 0, 0]
 
     with computation(PARALLEL), interval(0, -1):
         # first guess values for T

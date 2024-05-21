@@ -16,7 +16,7 @@
 
 from __future__ import annotations
 from functools import cached_property
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ifs_physics_common.components import DiagnosticComponent
 from ifs_physics_common.grid import I, J, K
@@ -24,9 +24,10 @@ from ifs_physics_common.grid import I, J, K
 if TYPE_CHECKING:
     from gt4py.cartesian import StencilObject
 
+    from cloudsc2_gt4py.iox import YoethfParams, YomcstParams
     from ifs_physics_common.config import GT4PyConfig
     from ifs_physics_common.grid import ComputationalGrid
-    from ifs_physics_common.typingx import NDArrayLikeDict, ParameterDict, PropertyDict
+    from ifs_physics_common.typingx import NDArrayLikeDict, PropertyDict
 
 
 class Saturation(DiagnosticComponent):
@@ -39,8 +40,8 @@ class Saturation(DiagnosticComponent):
         computational_grid: ComputationalGrid,
         kflag: int,
         lphylin: bool,
-        yoethf_parameters: Optional[ParameterDict] = None,
-        yomcst_parameters: Optional[ParameterDict] = None,
+        yoethf_params: YoethfParams,
+        yomcst_params: YomcstParams,
         *,
         enable_checks: bool = True,
         gt4py_config: GT4PyConfig,
@@ -48,20 +49,20 @@ class Saturation(DiagnosticComponent):
         super().__init__(computational_grid, enable_checks=enable_checks, gt4py_config=gt4py_config)
 
         externals = {"KFLAG": kflag, "LPHYLIN": lphylin, "QMAX": 0.5}
-        externals.update(yoethf_parameters or {})
-        externals.update(yomcst_parameters or {})
+        externals.update(yoethf_params.dict())
+        externals.update(yomcst_params.dict())
         self.saturation = self.compile_stencil("saturation", externals)
 
     @cached_property
-    def _input_properties(self) -> PropertyDict:
+    def input_grid_properties(self) -> PropertyDict:
         return {
-            "f_ap": {"grid": (I, J, K), "units": "Pa"},
-            "f_t": {"grid": (I, J, K), "units": "K"},
+            "f_ap": {"grid_dims": (I, J, K), "units": "Pa"},
+            "f_t": {"grid_dims": (I, J, K), "units": "K"},
         }
 
     @cached_property
-    def _diagnostic_properties(self) -> PropertyDict:
-        return {"f_qsat": {"grid": (I, J, K), "units": "g g^-1"}}
+    def diagnostic_grid_properties(self) -> PropertyDict:
+        return {"f_qsat": {"grid_dims": (I, J, K), "units": "g g^-1"}}
 
     def array_call(self, state: NDArrayLikeDict, out: NDArrayLikeDict) -> None:
         self.saturation(

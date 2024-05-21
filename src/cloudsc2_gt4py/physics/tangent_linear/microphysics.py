@@ -20,25 +20,27 @@ from functools import cached_property
 import numpy as np
 from typing import TYPE_CHECKING
 
+from cloudsc2_gt4py.iox import (
+    YoethfParams,
+    YomcstParams,
+    YrecldpParams,
+    YrephliParams,
+    YrnclParams,
+    YrphncParams,
+)
 from ifs_physics_common.components import ImplicitTendencyComponent
 from ifs_physics_common.grid import I, J, K
-from ifs_physics_common.storage import managed_temporary_storage, zeros
+from ifs_physics_common.storage import managed_temporary_storage, gt_zeros
 from ifs_physics_common.numpyx import assign
 
 if TYPE_CHECKING:
     from datetime import timedelta
-    from typing import Optional, Union
 
     from gt4py.cartesian import StencilObject
 
     from ifs_physics_common.config import GT4PyConfig
     from ifs_physics_common.grid import ComputationalGrid
-    from ifs_physics_common.typingx import (
-        NDArrayLike,
-        NDArrayLikeDict,
-        ParameterDict,
-        PropertyDict,
-    )
+    from ifs_physics_common.typingx import NDArrayLike, NDArrayLikeDict, PropertyDict
 
 
 class Cloudsc2TL(ImplicitTendencyComponent):
@@ -50,13 +52,12 @@ class Cloudsc2TL(ImplicitTendencyComponent):
         computational_grid: ComputationalGrid,
         lphylin: bool,
         ldrain1d: bool,
-        yoethf_parameters: Optional[ParameterDict] = None,
-        yomcst_parameters: Optional[ParameterDict] = None,
-        yrecld_parameters: Optional[ParameterDict] = None,
-        yrecldp_parameters: Optional[ParameterDict] = None,
-        yrephli_parameters: Optional[ParameterDict] = None,
-        yrncl_parameters: Optional[ParameterDict] = None,
-        yrphnc_parameters: Optional[ParameterDict] = None,
+        yoethf_params: YoethfParams,
+        yomcst_params: YomcstParams,
+        yrecldp_params: YrecldpParams,
+        yrephli_params: YrephliParams,
+        yrncl_params: YrnclParams,
+        yrphnc_params: YrphncParams,
         *,
         enable_checks: bool = True,
         gt4py_config: GT4PyConfig,
@@ -64,19 +65,18 @@ class Cloudsc2TL(ImplicitTendencyComponent):
         super().__init__(computational_grid, enable_checks=enable_checks, gt4py_config=gt4py_config)
 
         nk = self.computational_grid.grids[I, J, K].shape[2]
-        self.klevel = zeros(
-            self.computational_grid, (K,), gt4py_config=self.gt4py_config, dtype="int"
+        self.klevel = gt_zeros(
+            self.computational_grid, (K,), gt4py_config=self.gt4py_config, dtype_name="int"
         )
         assign(self.klevel[:], np.arange(0, nk + 1))
 
-        externals: dict[str, Union[bool, float, int]] = {}
-        externals.update(yoethf_parameters or {})
-        externals.update(yomcst_parameters or {})
-        externals.update(yrecld_parameters or {})
-        externals.update(yrecldp_parameters or {})
-        externals.update(yrephli_parameters or {})
-        externals.update(yrncl_parameters or {})
-        externals.update(yrphnc_parameters or {})
+        externals = {}
+        externals.update(yoethf_params.dict())
+        externals.update(yomcst_params.dict())
+        externals.update(yrecldp_params.dict())
+        externals.update(yrephli_params.dict())
+        externals.update(yrncl_params.dict())
+        externals.update(yrphnc_params.dict())
         externals.update(
             {
                 "ICALL": 0,
@@ -92,71 +92,71 @@ class Cloudsc2TL(ImplicitTendencyComponent):
         self.cloudsc2 = self.compile_stencil("cloudsc2_tl", externals)
 
     @cached_property
-    def _input_properties(self) -> PropertyDict:
+    def input_grid_properties(self) -> PropertyDict:
         return {
-            "f_eta": {"grid": (K,), "units": ""},
-            "f_aph": {"grid": (I, J, K - 1 / 2), "units": "Pa"},
-            "f_aph_i": {"grid": (I, J, K - 1 / 2), "units": "Pa"},
-            "f_ap": {"grid": (I, J, K), "units": "Pa"},
-            "f_ap_i": {"grid": (I, J, K), "units": "Pa"},
-            "f_q": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_q_i": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_qsat": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_qsat_i": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_t": {"grid": (I, J, K), "units": "K"},
-            "f_t_i": {"grid": (I, J, K), "units": "K"},
-            "f_ql": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_ql_i": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_qi": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_qi_i": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_lude": {"grid": (I, J, K), "units": "kg m^-3 s^-1"},
-            "f_lude_i": {"grid": (I, J, K), "units": "kg m^-3 s^-1"},
-            "f_lu": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_lu_i": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_mfu": {"grid": (I, J, K), "units": "kg m^-2 s^-1"},
-            "f_mfu_i": {"grid": (I, J, K), "units": "kg m^-2 s^-1"},
-            "f_mfd": {"grid": (I, J, K), "units": "kg m^-2 s^-1"},
-            "f_mfd_i": {"grid": (I, J, K), "units": "kg m^-2 s^-1"},
-            "f_tnd_cml_t": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_t_i": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_q": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_q_i": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_ql": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_ql_i": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_qi": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_tnd_cml_qi_i": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_supsat": {"grid": (I, J, K), "units": "g g^-1"},
-            "f_supsat_i": {"grid": (I, J, K), "units": "g g^-1"},
+            "f_eta": {"grid_dims": (K,), "units": ""},
+            "f_aph": {"grid_dims": (I, J, K - 1 / 2), "units": "Pa"},
+            "f_aph_i": {"grid_dims": (I, J, K - 1 / 2), "units": "Pa"},
+            "f_ap": {"grid_dims": (I, J, K), "units": "Pa"},
+            "f_ap_i": {"grid_dims": (I, J, K), "units": "Pa"},
+            "f_q": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_q_i": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_qsat": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_qsat_i": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_t": {"grid_dims": (I, J, K), "units": "K"},
+            "f_t_i": {"grid_dims": (I, J, K), "units": "K"},
+            "f_ql": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_ql_i": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_qi": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_qi_i": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_lude": {"grid_dims": (I, J, K), "units": "kg m^-3 s^-1"},
+            "f_lude_i": {"grid_dims": (I, J, K), "units": "kg m^-3 s^-1"},
+            "f_lu": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_lu_i": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_mfu": {"grid_dims": (I, J, K), "units": "kg m^-2 s^-1"},
+            "f_mfu_i": {"grid_dims": (I, J, K), "units": "kg m^-2 s^-1"},
+            "f_mfd": {"grid_dims": (I, J, K), "units": "kg m^-2 s^-1"},
+            "f_mfd_i": {"grid_dims": (I, J, K), "units": "kg m^-2 s^-1"},
+            "f_tnd_cml_t": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_t_i": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_q": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_q_i": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_ql": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_ql_i": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_qi": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_tnd_cml_qi_i": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_supsat": {"grid_dims": (I, J, K), "units": "g g^-1"},
+            "f_supsat_i": {"grid_dims": (I, J, K), "units": "g g^-1"},
         }
 
     @cached_property
-    def _tendency_properties(self) -> PropertyDict:
+    def tendency_grid_properties(self) -> PropertyDict:
         return {
-            "f_t": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_t_i": {"grid": (I, J, K), "units": "K s^-1"},
-            "f_q": {"grid": (I, J, K), "units": "g g^-1 s^-1"},
-            "f_q_i": {"grid": (I, J, K), "units": "g g^-1 s^-1"},
-            "f_ql": {"grid": (I, J, K), "units": "g g^-1 s^-1"},
-            "f_ql_i": {"grid": (I, J, K), "units": "g g^-1 s^-1"},
-            "f_qi": {"grid": (I, J, K), "units": "g g^-1 s^-1"},
-            "f_qi_i": {"grid": (I, J, K), "units": "g g^-1 s^-1"},
+            "f_t": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_t_i": {"grid_dims": (I, J, K), "units": "K s^-1"},
+            "f_q": {"grid_dims": (I, J, K), "units": "g g^-1 s^-1"},
+            "f_q_i": {"grid_dims": (I, J, K), "units": "g g^-1 s^-1"},
+            "f_ql": {"grid_dims": (I, J, K), "units": "g g^-1 s^-1"},
+            "f_ql_i": {"grid_dims": (I, J, K), "units": "g g^-1 s^-1"},
+            "f_qi": {"grid_dims": (I, J, K), "units": "g g^-1 s^-1"},
+            "f_qi_i": {"grid_dims": (I, J, K), "units": "g g^-1 s^-1"},
         }
 
     @cached_property
-    def _diagnostic_properties(self) -> PropertyDict:
+    def diagnostic_grid_properties(self) -> PropertyDict:
         return {
-            "f_clc": {"grid": (I, J, K), "units": ""},
-            "f_clc_i": {"grid": (I, J, K), "units": ""},
-            "f_fhpsl": {"grid": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
-            "f_fhpsl_i": {"grid": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
-            "f_fhpsn": {"grid": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
-            "f_fhpsn_i": {"grid": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
-            "f_fplsl": {"grid": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
-            "f_fplsl_i": {"grid": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
-            "f_fplsn": {"grid": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
-            "f_fplsn_i": {"grid": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
-            "f_covptot": {"grid": (I, J, K), "units": ""},
-            "f_covptot_i": {"grid": (I, J, K), "units": ""},
+            "f_clc": {"grid_dims": (I, J, K), "units": ""},
+            "f_clc_i": {"grid_dims": (I, J, K), "units": ""},
+            "f_fhpsl": {"grid_dims": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
+            "f_fhpsl_i": {"grid_dims": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
+            "f_fhpsn": {"grid_dims": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
+            "f_fhpsn_i": {"grid_dims": (I, J, K - 1 / 2), "units": "J m^-2 s^-1"},
+            "f_fplsl": {"grid_dims": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
+            "f_fplsl_i": {"grid_dims": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
+            "f_fplsn": {"grid_dims": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
+            "f_fplsn_i": {"grid_dims": (I, J, K - 1 / 2), "units": "Kg m^-2 s^-1"},
+            "f_covptot": {"grid_dims": (I, J, K), "units": ""},
+            "f_covptot_i": {"grid_dims": (I, J, K), "units": ""},
         }
 
     def array_call(
@@ -170,8 +170,6 @@ class Cloudsc2TL(ImplicitTendencyComponent):
         with managed_temporary_storage(
             self.computational_grid, *repeat(((I, J), "float"), 9), gt4py_config=self.gt4py_config
         ) as (aph_s, aph_s_i, rfl, rfl_i, sfl, sfl_i, covptot, covptot_i, trpaus):
-            aph_s[...] = state["f_aph"][..., -1]
-            aph_s_i[...] = state["f_aph_i"][..., -1]
             self.cloudsc2(
                 in_ap=state["f_ap"],
                 in_ap_i=state["f_ap_i"],

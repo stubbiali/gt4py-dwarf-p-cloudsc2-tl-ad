@@ -19,7 +19,7 @@ import numpy as np
 from os.path import dirname, join, normpath
 from typing import Literal
 
-from ifs_physics_common.framework.config import DataTypes, GT4PyConfig, IOConfig, PythonConfig
+from ifs_physics_common.config import DataTypes, GT4PyConfig, IOConfig, PythonConfig
 
 
 DATA_DIR = normpath(join(dirname(__file__), "../data"))
