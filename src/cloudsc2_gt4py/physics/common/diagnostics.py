@@ -18,26 +18,26 @@ from __future__ import annotations
 from functools import cached_property
 from typing import TYPE_CHECKING
 
-from ifs_physics_common.framework.components import DiagnosticComponent
-from ifs_physics_common.framework.grid import I, J, K
+from ifs_physics_common.components import DiagnosticComponent
+from ifs_physics_common.grid import I, J, K
 
 if TYPE_CHECKING:
-    from ifs_physics_common.utils.typingx import NDArrayLikeDict, PropertyDict
+    from ifs_physics_common.typingx import NDArrayLikeDict, PropertyDict
 
 
 class EtaLevels(DiagnosticComponent):
     """Diagnose reference eta-levels."""
 
     @cached_property
-    def _input_properties(self) -> PropertyDict:
+    def input_grid_properties(self) -> PropertyDict:
         return {
-            "f_ap": {"grid": (I, J, K), "units": "Pa"},
-            "f_aph": {"grid": (I, J, K - 1 / 2), "units": "Pa"},
+            "f_ap": {"grid_dims": (I, J, K), "units": "Pa"},
+            "f_aph": {"grid_dims": (I, J, K - 1 / 2), "units": "Pa"},
         }
 
     @cached_property
-    def _diagnostic_properties(self) -> PropertyDict:
-        return {"f_eta": {"grid": (K,), "units": ""}}
+    def diagnostic_grid_properties(self) -> PropertyDict:
+        return {"f_eta": {"grid_dims": (K,), "units": ""}}
 
     def array_call(self, state: NDArrayLikeDict, out: NDArrayLikeDict) -> None:
         nz = self.computational_grid.grids[I, J, K].shape[2]

@@ -16,7 +16,7 @@
 
 from gt4py.cartesian import gtscript
 
-from ifs_physics_common.framework.stencil import function_collection
+from ifs_physics_common.stencil import function_collection
 
 
 @function_collection("f_cuadjtqs_nl_0")

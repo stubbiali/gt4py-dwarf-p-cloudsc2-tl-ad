@@ -18,21 +18,20 @@ from __future__ import annotations
 import click
 from typing import TYPE_CHECKING
 
+from cloudsc2_gt4py.iox import HDF5Operator
 from cloudsc2_gt4py.physics.common.diagnostics import EtaLevels
 from cloudsc2_gt4py.physics.adjoint.validation import SymmetryTest
-from cloudsc2_gt4py.state import get_initial_state
-from cloudsc2_gt4py.utils.iox import HDF5Reader
-from ifs_physics_common.framework.grid import ComputationalGrid
-from ifs_physics_common.utils.output import (
-    write_performance_to_csv,
-    write_stencils_performance_to_csv,
-)
-from ifs_physics_common.utils.timing import timing
+from cloudsc2_gt4py.setup import get_state
+from ifs_physics_common.config import GridConfig
+from ifs_physics_common.grid import ComputationalGrid
+from ifs_physics_common.iox import HDF5GridOperator
+from ifs_physics_common.output import write_performance_to_csv, write_stencils_performance_to_csv
+from ifs_physics_common.timing import timing
 
 if TYPE_CHECKING:
     from typing import Literal, Optional
 
-    from ifs_physics_common.framework.config import IOConfig, PythonConfig
+    from ifs_physics_common.config import IOConfig, PythonConfig
 
     from .config import DEFAULT_CONFIG, DEFAULT_IO_CONFIG
 else:
@@ -40,29 +39,29 @@ else:
 
 
 def core(config: PythonConfig, io_config: IOConfig) -> PythonConfig:
-    # input file
-    hdf5_reader = HDF5Reader(config.input_file, config.data_types)
-
     # grid
-    nx = config.num_cols or hdf5_reader.get_nlon()
+    hdf5_operator = HDF5Operator(config.input_file, gt4py_config=config.gt4py_config)
+    nx = config.num_cols or hdf5_operator.get_nlon()
     config = config.with_num_cols(nx)
-    nz = hdf5_reader.get_nlev()
-    computational_grid = ComputationalGrid(nx, 1, nz)
+    nz = hdf5_operator.get_nlev()
+    computational_grid = ComputationalGrid(GridConfig(nx=nx, ny=1, nz=nz))
 
     # state and accumulated tendencies
-    state = get_initial_state(computational_grid, hdf5_reader, gt4py_config=config.gt4py_config)
+    hdf5_grid_operator = HDF5GridOperator(
+        config.input_file, computational_grid, gt4py_config=config.gt4py_config
+    )
+    state = get_state(hdf5_grid_operator)
 
     # timestep
-    dt = hdf5_reader.get_timestep()
+    dt = hdf5_operator.get_timestep()
 
-    # parameters
-    yoethf_params = hdf5_reader.get_yoethf_parameters()
-    yomcst_params = hdf5_reader.get_yomcst_parameters()
-    yrecld_params = hdf5_reader.get_yrecld_parameters()
-    yrecldp_params = hdf5_reader.get_yrecldp_parameters()
-    yrephli_params = hdf5_reader.get_yrephli_parameters()
-    yrncl_params = hdf5_reader.get_yrncl_parameters()
-    yrphnc_params = hdf5_reader.get_yrphnc_parameters()
+    # params
+    yoethf_params = hdf5_operator.get_yoethf_params()
+    yomcst_params = hdf5_operator.get_yomcst_params()
+    yrecldp_params = hdf5_operator.get_yrecldp_params()
+    yrephli_params = hdf5_operator.get_yrephli_params()
+    yrncl_params = hdf5_operator.get_yrncl_params()
+    yrphnc_params = hdf5_operator.get_yrphnc_params()
 
     # diagnose reference eta-levels
     eta_levels = EtaLevels(
@@ -79,13 +78,12 @@ def core(config: PythonConfig, io_config: IOConfig) -> PythonConfig:
         kflag=1,
         lphylin=True,
         ldrain1d=False,
-        yoethf_parameters=yoethf_params,
-        yomcst_parameters=yomcst_params,
-        yrecld_parameters=yrecld_params,
-        yrecldp_parameters=yrecldp_params,
-        yrephli_parameters=yrephli_params,
-        yrncl_parameters=yrncl_params,
-        yrphnc_parameters=yrphnc_params,
+        yoethf_params=yoethf_params,
+        yomcst_params=yomcst_params,
+        yrecldp_params=yrecldp_params,
+        yrephli_params=yrephli_params,
+        yrncl_params=yrncl_params,
+        yrphnc_params=yrphnc_params,
         enable_checks=config.sympl_enable_checks,
         gt4py_config=config.gt4py_config,
     )

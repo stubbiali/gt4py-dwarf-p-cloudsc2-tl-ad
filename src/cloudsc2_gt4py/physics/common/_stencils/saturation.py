@@ -17,7 +17,7 @@
 from gt4py.cartesian import gtscript
 
 from cloudsc2_gt4py.physics.common._stencils.fcttre import f_foealfa, f_foeewm, f_foeewmcu
-from ifs_physics_common.framework.stencil import stencil_collection
+from ifs_physics_common.stencil import stencil_collection
 
 
 @stencil_collection("saturation")
