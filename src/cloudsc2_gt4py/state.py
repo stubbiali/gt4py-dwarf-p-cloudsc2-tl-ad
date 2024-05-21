@@ -34,9 +34,7 @@ def allocate_state(
     computational_grid: ComputationalGrid, *, gt4py_config: GT4PyConfig
 ) -> dict[str, DataArray]:
     def allocator(units: str) -> DataArray:
-        return zeros(
-            computational_grid, (I, J, K), units, gt4py_config=gt4py_config, dtype="float"
-        )
+        return zeros(computational_grid, (I, J, K), units, gt4py_config=gt4py_config, dtype="float")
 
     def allocator_zh(units: str) -> DataArray:
         return zeros(
