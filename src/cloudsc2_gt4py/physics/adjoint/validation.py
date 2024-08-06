@@ -18,20 +18,27 @@ from __future__ import annotations
 import numpy as np
 from typing import TYPE_CHECKING
 
+from cloudsc2_gt4py.iox import (
+    YoethfParams,
+    YomcstParams,
+    YrecldpParams,
+    YrephliParams,
+    YrnclParams,
+    YrphncParams,
+)
 from cloudsc2_gt4py.physics.adjoint.microphysics import Cloudsc2AD
 from cloudsc2_gt4py.physics.common.increment import StateIncrement
 from cloudsc2_gt4py.physics.common.saturation import Saturation
 from cloudsc2_gt4py.physics.tangent_linear.microphysics import Cloudsc2TL
-from ifs_physics_common.utils.numpyx import to_numpy
+from ifs_physics_common.numpyx import to_numpy
 
 if TYPE_CHECKING:
     from datetime import timedelta
     from numpy.typing import NDArray
-    from typing import Optional
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import DataArrayDict, ParameterDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import DataArrayDict
 
 
 class SymmetryTest:
@@ -54,13 +61,12 @@ class SymmetryTest:
         kflag: int,
         lphylin: bool,
         ldrain1d: bool,
-        yoethf_parameters: Optional[ParameterDict] = None,
-        yomcst_parameters: Optional[ParameterDict] = None,
-        yrecld_parameters: Optional[ParameterDict] = None,
-        yrecldp_parameters: Optional[ParameterDict] = None,
-        yrephli_parameters: Optional[ParameterDict] = None,
-        yrncl_parameters: Optional[ParameterDict] = None,
-        yrphnc_parameters: Optional[ParameterDict] = None,
+        yoethf_params: YoethfParams,
+        yomcst_params: YomcstParams,
+        yrecldp_params: YrecldpParams,
+        yrephli_params: YrephliParams,
+        yrncl_params: YrnclParams,
+        yrphnc_params: YrphncParams,
         *,
         enable_checks: bool = True,
         gt4py_config: GT4PyConfig,
@@ -72,8 +78,8 @@ class SymmetryTest:
             computational_grid,
             kflag,
             lphylin,
-            yoethf_parameters,
-            yomcst_parameters,
+            yoethf_params,
+            yomcst_params,
             enable_checks=enable_checks,
             gt4py_config=gt4py_config,
         )
@@ -83,13 +89,12 @@ class SymmetryTest:
             computational_grid,
             lphylin,
             ldrain1d,
-            yoethf_parameters,
-            yomcst_parameters,
-            yrecld_parameters,
-            yrecldp_parameters,
-            yrephli_parameters,
-            yrncl_parameters,
-            yrphnc_parameters,
+            yoethf_params,
+            yomcst_params,
+            yrecldp_params,
+            yrephli_params,
+            yrncl_params,
+            yrphnc_params,
             enable_checks=enable_checks,
             gt4py_config=gt4py_config,
         )
@@ -97,13 +102,12 @@ class SymmetryTest:
             computational_grid,
             lphylin,
             ldrain1d,
-            yoethf_parameters,
-            yomcst_parameters,
-            yrecld_parameters,
-            yrecldp_parameters,
-            yrephli_parameters,
-            yrncl_parameters,
-            yrphnc_parameters,
+            yoethf_params,
+            yomcst_params,
+            yrecldp_params,
+            yrephli_params,
+            yrncl_params,
+            yrphnc_params,
             enable_checks=enable_checks,
             gt4py_config=gt4py_config,
         )

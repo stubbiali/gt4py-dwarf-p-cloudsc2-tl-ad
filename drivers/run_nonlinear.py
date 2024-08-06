@@ -18,24 +18,30 @@ from __future__ import annotations
 import click
 from typing import TYPE_CHECKING
 
+from cloudsc2_gt4py.iox import HDF5Operator
 from cloudsc2_gt4py.physics.common.diagnostics import EtaLevels
 from cloudsc2_gt4py.physics.common.saturation import Saturation
 from cloudsc2_gt4py.physics.nonlinear.microphysics import Cloudsc2NL
-from cloudsc2_gt4py.physics.nonlinear.validation import validate
-from cloudsc2_gt4py.state import get_initial_state
-from cloudsc2_gt4py.utils.iox import HDF5Reader
-from ifs_physics_common.framework.grid import ComputationalGrid
-from ifs_physics_common.utils.output import (
+from cloudsc2_gt4py.physics.nonlinear.reference import (
+    get_reference_diagnostics,
+    get_reference_tendencies,
+)
+from cloudsc2_gt4py.setup import get_state
+from ifs_physics_common.config import GridConfig
+from ifs_physics_common.grid import ComputationalGrid
+from ifs_physics_common.iox import HDF5GridOperator
+from ifs_physics_common.output import (
     print_performance,
     write_performance_to_csv,
     write_stencils_performance_to_csv,
 )
-from ifs_physics_common.utils.timing import timing
+from ifs_physics_common.timing import timing
+from ifs_physics_common.validation import validate
 
 if TYPE_CHECKING:
     from typing import Literal, Optional
 
-    from ifs_physics_common.framework.config import IOConfig, PythonConfig
+    from ifs_physics_common.config import IOConfig, PythonConfig
 
     from .config import DEFAULT_CONFIG, DEFAULT_IO_CONFIG
 else:
@@ -43,28 +49,28 @@ else:
 
 
 def core(config: PythonConfig, io_config: IOConfig) -> PythonConfig:
-    # input file
-    hdf5_reader = HDF5Reader(config.input_file, config.data_types)
-
     # grid
-    nx = config.num_cols or hdf5_reader.get_nlon()
+    hdf5_operator = HDF5Operator(config.input_file, gt4py_config=config.gt4py_config)
+    nx = config.num_cols or hdf5_operator.get_nlon()
     config = config.with_num_cols(nx)
-    nz = hdf5_reader.get_nlev()
-    computational_grid = ComputationalGrid(nx, 1, nz)
+    nz = hdf5_operator.get_nlev()
+    computational_grid = ComputationalGrid(GridConfig(nx=nx, ny=1, nz=nz))
 
     # state and accumulated tendencies
-    state = get_initial_state(computational_grid, hdf5_reader, gt4py_config=config.gt4py_config)
+    hdf5_grid_operator = HDF5GridOperator(
+        config.input_file, computational_grid, gt4py_config=config.gt4py_config
+    )
+    state = get_state(hdf5_grid_operator)
 
     # timestep
-    dt = hdf5_reader.get_timestep()
+    dt = hdf5_operator.get_timestep()
 
     # parameters
-    yoethf_params = hdf5_reader.get_yoethf_parameters()
-    yomcst_params = hdf5_reader.get_yomcst_parameters()
-    yrecld_params = hdf5_reader.get_yrecld_parameters()
-    yrecldp_params = hdf5_reader.get_yrecldp_parameters()
-    yrephli_params = hdf5_reader.get_yrephli_parameters()
-    yrphnc_params = hdf5_reader.get_yrphnc_parameters()
+    yoethf_params = hdf5_operator.get_yoethf_params()
+    yomcst_params = hdf5_operator.get_yomcst_params()
+    yrecldp_params = hdf5_operator.get_yrecldp_params()
+    yrephli_params = hdf5_operator.get_yrephli_params()
+    yrphnc_params = hdf5_operator.get_yrphnc_params()
 
     # diagnose reference eta-levels
     eta_levels = EtaLevels(
@@ -79,38 +85,37 @@ def core(config: PythonConfig, io_config: IOConfig) -> PythonConfig:
         computational_grid,
         kflag=1,
         lphylin=True,
-        yoethf_parameters=yoethf_params,
-        yomcst_parameters=yomcst_params,
+        yoethf_params=yoethf_params,
+        yomcst_params=yomcst_params,
         enable_checks=config.sympl_enable_checks,
         gt4py_config=config.gt4py_config,
     )
-    diagnostics = saturation(state)
-    state.update(diagnostics)
+    diags = saturation(state)
+    state.update(diags)
 
     # microphysics
     cloudsc2_nl = Cloudsc2NL(
         computational_grid,
         lphylin=True,
         ldrain1d=False,
-        yoethf_parameters=yoethf_params,
-        yomcst_parameters=yomcst_params,
-        yrecld_parameters=yrecld_params,
-        yrecldp_parameters=yrecldp_params,
-        yrephli_parameters=yrephli_params,
-        yrphnc_parameters=yrphnc_params,
+        yoethf_params=yoethf_params,
+        yomcst_params=yomcst_params,
+        yrecldp_params=yrecldp_params,
+        yrephli_params=yrephli_params,
+        yrphnc_params=yrphnc_params,
         enable_checks=config.sympl_enable_checks,
         gt4py_config=config.gt4py_config,
     )
-    tendencies, diags = cloudsc2_nl(state, dt)
-    diagnostics.update(diags)
+    tends, diags_cloudsc = cloudsc2_nl(state, dt)
+    diags.update(diags_cloudsc)
 
     config.gt4py_config.reset_exec_info()
 
     runtime_l = []
     for i in range(config.num_runs):
         with timing(f"run_{i}") as timer:
-            saturation(state, out=diagnostics)
-            cloudsc2_nl(state, dt, out_tendencies=tendencies, out_diagnostics=diagnostics)
+            saturation(state, out=diags)
+            cloudsc2_nl(state, dt, out_tendencies=tends, out_diagnostics=diags)
         runtime_l.append(timer.get_time(f"run_{i}", units="ms"))
 
     runtime_mean, runtime_stddev, mflops_mean, mflops_stddev = print_performance(nx, runtime_l)
@@ -132,9 +137,14 @@ def core(config: PythonConfig, io_config: IOConfig) -> PythonConfig:
         )
 
     if config.enable_validation:
-        hdf5_reader_ref = HDF5Reader(config.reference_file, config.data_types)
+        hdf5_grid_operator_ref = HDF5GridOperator(
+            config.reference_file, computational_grid, gt4py_config=config.gt4py_config
+        )
+        tends_ref = get_reference_tendencies(hdf5_grid_operator_ref)
+        diags_ref = get_reference_diagnostics(hdf5_grid_operator_ref)
         print("\n== Validation:")
-        validate(hdf5_reader_ref, tendencies, diagnostics, atol=config.atol, rtol=config.rtol)
+        validate(tends, tends_ref, atol=config.atol, rtol=config.rtol)
+        validate(diags, diags_ref, atol=config.atol, rtol=config.rtol)
 
     return config
 

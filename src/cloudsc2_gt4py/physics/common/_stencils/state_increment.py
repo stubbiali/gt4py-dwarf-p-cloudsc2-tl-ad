@@ -16,7 +16,7 @@
 
 from gt4py.cartesian import gtscript
 
-from ifs_physics_common.framework.stencil import stencil_collection
+from ifs_physics_common.stencil import stencil_collection
 
 
 @stencil_collection("state_increment")
