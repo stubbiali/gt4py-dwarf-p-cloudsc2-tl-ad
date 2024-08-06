@@ -19,20 +19,27 @@ import numpy as np
 import sys
 from typing import TYPE_CHECKING
 
+from cloudsc2_gt4py.iox import (
+    YoethfParams,
+    YomcstParams,
+    YrecldpParams,
+    YrephliParams,
+    YrnclParams,
+    YrphncParams,
+)
 from cloudsc2_gt4py.physics.common.increment import PerturbedState, StateIncrement
 from cloudsc2_gt4py.physics.common.saturation import Saturation
 from cloudsc2_gt4py.physics.nonlinear.microphysics import Cloudsc2NL
 from cloudsc2_gt4py.physics.tangent_linear.microphysics import Cloudsc2TL
-from ifs_physics_common.utils.timing import timing
+from ifs_physics_common.timing import timing
 
 if TYPE_CHECKING:
     from datetime import timedelta
     from numpy.typing import NDArray
-    from typing import List, Optional, Tuple
 
-    from ifs_physics_common.framework.config import GT4PyConfig
-    from ifs_physics_common.framework.grid import ComputationalGrid
-    from ifs_physics_common.utils.typingx import DataArrayDict, ParameterDict
+    from ifs_physics_common.config import GT4PyConfig
+    from ifs_physics_common.grid import ComputationalGrid
+    from ifs_physics_common.typingx import DataArrayDict
 
 
 class TaylorTest:
@@ -43,8 +50,8 @@ class TaylorTest:
     diags_sat: DataArrayDict
     diags_tl: DataArrayDict
     f1: float
-    f2s: Tuple[float, ...]
-    perturbed_states: List[PerturbedState]
+    f2s: tuple[float, ...]
+    perturbed_states: list[PerturbedState]
     saturation: Saturation
     state_i: DataArrayDict
     state_increment: StateIncrement
@@ -57,17 +64,16 @@ class TaylorTest:
         self,
         computational_grid: ComputationalGrid,
         factor1: float,
-        factor2s: Tuple[float, ...],
+        factor2s: tuple[float, ...],
         kflag: int,
         lphylin: bool,
         ldrain1d: bool,
-        yoethf_parameters: Optional[ParameterDict] = None,
-        yomcst_parameters: Optional[ParameterDict] = None,
-        yrecld_parameters: Optional[ParameterDict] = None,
-        yrecldp_parameters: Optional[ParameterDict] = None,
-        yrephli_parameters: Optional[ParameterDict] = None,
-        yrncl_parameters: Optional[ParameterDict] = None,
-        yrphnc_parameters: Optional[ParameterDict] = None,
+        yoethf_params: YoethfParams,
+        yomcst_params: YomcstParams,
+        yrecldp_params: YrecldpParams,
+        yrephli_params: YrephliParams,
+        yrncl_params: YrnclParams,
+        yrphnc_params: YrphncParams,
         *,
         enable_checks: bool = True,
         gt4py_config: GT4PyConfig,
@@ -76,16 +82,15 @@ class TaylorTest:
         self.f2s = factor2s
 
         # no regularization in Taylor test
-        yrncl_parameters: ParameterDict = yrncl_parameters or {}  # type: ignore[no-redef]
-        yrncl_parameters["LREGCL"] = False  # type: ignore[index]
+        yrncl_params.LREGCL = False
 
         # saturation
         self.saturation = Saturation(
             computational_grid,
             kflag,
             lphylin,
-            yoethf_parameters,
-            yomcst_parameters,
+            yoethf_params,
+            yomcst_params,
             enable_checks=enable_checks,
             gt4py_config=gt4py_config,
         )
@@ -95,12 +100,11 @@ class TaylorTest:
             computational_grid,
             lphylin,
             ldrain1d,
-            yoethf_parameters,
-            yomcst_parameters,
-            yrecld_parameters,
-            yrecldp_parameters,
-            yrephli_parameters,
-            yrphnc_parameters,
+            yoethf_params,
+            yomcst_params,
+            yrecldp_params,
+            yrephli_params,
+            yrphnc_params,
             enable_checks=enable_checks,
             gt4py_config=gt4py_config,
         )
@@ -108,13 +112,12 @@ class TaylorTest:
             computational_grid,
             lphylin,
             ldrain1d,
-            yoethf_parameters,
-            yomcst_parameters,
-            yrecld_parameters,
-            yrecldp_parameters,
-            yrephli_parameters,
-            yrncl_parameters,
-            yrphnc_parameters,
+            yoethf_params,
+            yomcst_params,
+            yrecldp_params,
+            yrephli_params,
+            yrncl_params,
+            yrphnc_params,
             enable_checks=enable_checks,
             gt4py_config=gt4py_config,
         )
@@ -235,7 +238,7 @@ class TaylorTest:
 
         return total_norm / total_count if total_count > 0 else 0
 
-    def get_fields(self, name: str, dct_name: str) -> Tuple[NDArray, NDArray, NDArray]:
+    def get_fields(self, name: str, dct_name: str) -> tuple[NDArray, NDArray, NDArray]:
         dct_nl = getattr(self, dct_name + "_nl")
         field_nl = dct_nl[name].data[:, 0, :]
 

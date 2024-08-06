@@ -17,7 +17,7 @@
 from gt4py.cartesian import gtscript
 
 from cloudsc2_gt4py.physics.tangent_linear._stencils.cuadjtqs import f_cuadjtqs_tl
-from ifs_physics_common.framework.stencil import stencil_collection
+from ifs_physics_common.stencil import stencil_collection
 
 
 @stencil_collection("cloudsc2_tl")
@@ -121,14 +121,18 @@ def cloudsc2_tl(
         ZSCAL,
     )
 
-    # set to zero precipitation fluxes at the top
-    with computation(FORWARD), interval(0, 1):
+    with computation(FORWARD), interval(-1, None):
+        # set to zero precipitation fluxes at the top
         tmp_rfl[0, 0] = 0.0
         tmp_rfl_i[0, 0] = 0.0
         tmp_sfl[0, 0] = 0.0
         tmp_sfl_i[0, 0] = 0.0
         tmp_covptot[0, 0] = 0.0
         tmp_covptot_i[0, 0] = 0.0
+
+        # set surface pressure
+        tmp_aph_s[0, 0] = in_aph[0, 0, 0]
+        tmp_aph_s_i[0, 0] = in_aph_i[0, 0, 0]
 
     with computation(PARALLEL), interval(0, -1):
         # first guess values for T
