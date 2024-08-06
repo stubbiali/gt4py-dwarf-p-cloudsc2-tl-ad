@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 import numpy as np
-import sys
 from typing import TYPE_CHECKING
 
 from cloudsc2_gt4py.physics.adjoint.microphysics import Cloudsc2AD
@@ -151,16 +150,15 @@ class SymmetryTest:
 
         if enable_validation:
             norm2 = self.get_norm2(self.state_i, self.tends_ad, self.diags_ad)
+            eps = np.finfo(self.saturation.gt4py_config.dtypes.float).eps
             norm3 = np.where(
-                norm2 == 0,
-                abs(norm1 - norm2) / sys.float_info.epsilon,
-                abs(norm1 - norm2) / (sys.float_info.epsilon * norm2),
+                norm2 == 0, abs(norm1 - norm2) / eps, abs(norm1 - norm2) / (eps * norm2)
             )
             if norm3.max() < 1e4:
                 print("The symmetry test passed. HOORAY!")
             else:
                 print("The symmetry test failed.")
-            print(f"The maximum error is {norm3.max():.10e} times the zero of the machine.")
+            print(f"The maximum error is {norm3.max():.10e} times the machine epsilon.")
 
     def get_norm1(self, tends_tl: DataArrayDict, diags_tl: DataArrayDict) -> NDArray:
         out: NDArray = None  # type: ignore[assignment]
